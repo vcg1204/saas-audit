@@ -545,6 +545,92 @@ def costperemployee():
                            total_monthly=round(total_monthly, 2)
                            )
 
+# ── Renewal Negotiation Brief ──────────────────────────────────────────
+
+
+@app.route("/negotiation")
+def negotiation():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT team_size FROM budget WHERE id=1")
+    row = cur.fetchone()
+    team_size = int(row["team_size"])
+
+    cur.execute("SELECT * FROM subscriptions ORDER BY renewal_date ASC")
+    subs = cur.fetchall()
+
+    briefs = []
+    for s in subs:
+        monthly = float(
+            s["cost"]) / 12 if s["billing_cycle"] == "Annual" else float(s["cost"])
+        days_left = (s["renewal_date"] - date.today()
+                     ).days if s["renewal_date"] else None
+
+        usage_pct = None
+        if s["seats_paid"] and s["seats_used"] is not None:
+            usage_pct = round(
+                (float(s["seats_used"]) / float(s["seats_paid"])) * 100, 1)
+
+        cost_per_used_seat = None
+        if s["seats_used"] and float(s["seats_used"]) > 0:
+            cost_per_used_seat = round(monthly / float(s["seats_used"]), 2)
+
+        # generate position and talking points
+        position = ""
+        talking_points = []
+        urgency = "Low"
+
+        if days_left is not None and days_left <= 60:
+            urgency = "High" if days_left <= 14 else "Medium"
+
+            if usage_pct is not None and usage_pct < 40:
+                position = "Threaten Cancellation"
+                talking_points = [
+                    f"Only {usage_pct}% of seats are actively used.",
+                    "Team has not adopted the tool at the expected level.",
+                    "Request a 30-40% discount or consider cancelling.",
+                    "Ask for a shorter contract term to reduce commitment."
+                ]
+            elif usage_pct is not None and usage_pct < 70:
+                position = "Negotiate Discount"
+                talking_points = [
+                    f"Usage is at {usage_pct}% — below full utilisation.",
+                    f"Current cost per used seat is ${cost_per_used_seat}/month — above market average.",
+                    "Request 15-20% discount citing underutilisation.",
+                    "Ask vendor to match competitor pricing."
+                ]
+            else:
+                position = "Renew with Minor Negotiation"
+                talking_points = [
+                    f"Tool is well used at {usage_pct}% seat utilisation.",
+                    "Request early renewal discount (5-10%).",
+                    "Ask for additional seats at no extra cost.",
+                    "Lock in current pricing for 2 years to avoid increases."
+                ]
+        else:
+            position = "No Action Needed"
+            talking_points = [
+                "Renewal is not imminent. Review closer to date."]
+
+        briefs.append({
+            "tool": s["tool_name"],
+            "category": s["category"],
+            "renewal_date": s["renewal_date"],
+            "days_left": days_left,
+            "monthly": round(monthly, 2),
+            "usage_pct": usage_pct,
+            "cost_per_used_seat": cost_per_used_seat,
+            "position": position,
+            "talking_points": talking_points,
+            "urgency": urgency
+        })
+
+    cur.close()
+    conn.close()
+
+    return render_template("negotiation.html", briefs=briefs)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

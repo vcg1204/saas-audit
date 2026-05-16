@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Negotiation Briefs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav>
+        <span class="brand">SaaS Audit</span>
+        <a href="/">Dashboard</a>
+        <a href="/subscriptions">Subscriptions</a>
+        <a href="/add">Add New</a>
+        <a href="/insights">Insights</a>
+        <a href="/recommendations">Recommendations</a>
+        <a href="/health">Health</a>
+        <a href="/budget">Budget</a>
+        <a href="/costperemployee">Cost/Employee</a>
+        <a href="/negotiation">Negotiation</a>
+    </nav>
+
+    <div class="container">
+        <h1>Vendor Renewal Negotiation Briefs</h1>
+        <p style="color:#888; font-size:14px; margin-bottom:24px;">
+            Auto-generated negotiation positions based on usage, cost, and renewal timeline.
+        </p>
+
+        {% for b in briefs %}
+        <div class="section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <div>
+                    <h2 style="margin-bottom:4px;">{{ b.tool }}</h2>
+                    <span style="font-size:13px; color:#888;">{{ b.category }}</span>
+                </div>
+                <div style="text-align:right;">
+                    {% if b.urgency == "High" %}
+                    <span class="badge red">High Urgency</span>
+                    {% elif b.urgency == "Medium" %}
+                    <span class="badge orange">Medium Urgency</span>
+                    {% else %}
+                    <span class="badge green">Low Urgency</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:20px;">
+                <div>
+                    <div style="font-size:12px; color:#888;">Renewal Date</div>
+                    <div style="font-weight:600;">{{ b.renewal_date or "—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:12px; color:#888;">Days Left</div>
+                    <div style="font-weight:600;">{{ b.days_left if b.days_left is not none else "—" }}</div>
+                </div>
+                <div>
+                    <div style="font-size:12px; color:#888;">Monthly Cost</div>
+                    <div style="font-weight:600;">${{ "{:,.2f}".format(b.monthly) }}</div>
+                </div>
+                <div>
+                    <div style="font-size:12px; color:#888;">Seat Usage</div>
+                    <div style="font-weight:600;">{{ b.usage_pct if b.usage_pct is not none else "—" }}%</div>
+                </div>
+            </div>
+
+            <div style="background:#f4f6f9; border-radius:6px; padding:16px; margin-bottom:16px;">
+                <div style="font-size:12px; color:#888; margin-bottom:6px;">Recommended Position</div>
+                <div style="font-weight:700; font-size:16px; color:#1a1a2e;">{{ b.position }}</div>
+            </div>
+
+            <div>
+                <div style="font-size:12px; color:#888; margin-bottom:8px;">Talking Points</div>
+                <ul style="padding-left:20px;">
+                    {% for point in b.talking_points %}
+                    <li style="font-size:14px; margin-bottom:6px; color:#333;">{{ point }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+</body>
+
+</html>
