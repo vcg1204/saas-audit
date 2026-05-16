@@ -483,6 +483,68 @@ def budget():
                            breakdown=breakdown
                            )
 
+# ── Cost Per Employee ──────────────────────────────────────────────────
+
+
+@app.route("/costperemployee", methods=["GET", "POST"])
+def costperemployee():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        team_size = request.form["team_size"]
+        cur.execute("UPDATE budget SET team_size=%s WHERE id=1", (team_size,))
+        conn.commit()
+
+    cur.execute("SELECT team_size FROM budget WHERE id=1")
+    row = cur.fetchone()
+    team_size = int(row["team_size"])
+
+    cur.execute("SELECT * FROM subscriptions")
+    subs = cur.fetchall()
+
+    total_monthly = 0
+    breakdown = []
+
+    for s in subs:
+        monthly = float(
+            s["cost"]) / 12 if s["billing_cycle"] == "Annual" else float(s["cost"])
+        cost_per_person = round(monthly / team_size, 2) if team_size > 0 else 0
+        total_monthly += monthly
+
+        if cost_per_person > 20:
+            flag = "Expensive"
+            flag_color = "red"
+        elif cost_per_person > 10:
+            flag = "Moderate"
+            flag_color = "orange"
+        else:
+            flag = "Reasonable"
+            flag_color = "green"
+
+        breakdown.append({
+            "tool": s["tool_name"],
+            "category": s["category"],
+            "monthly": round(monthly, 2),
+            "cost_per_person": cost_per_person,
+            "flag": flag,
+            "flag_color": flag_color
+        })
+
+    breakdown.sort(key=lambda x: x["cost_per_person"], reverse=True)
+    total_per_person = round(total_monthly / team_size,
+                             2) if team_size > 0 else 0
+
+    cur.close()
+    conn.close()
+
+    return render_template("costperemployee.html",
+                           team_size=team_size,
+                           breakdown=breakdown,
+                           total_per_person=total_per_person,
+                           total_monthly=round(total_monthly, 2)
+                           )
+
 
 if __name__ == "__main__":
     app.run(debug=True)
