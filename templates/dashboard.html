@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SaaS Audit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav>
+        <span class="brand">SaaS Audit</span>
+        <a href="/">Dashboard</a>
+        <a href="/subscriptions">Subscriptions</a>
+        <a href="/add">Add New</a>
+        <a href="/insights">Insights</a>
+    </nav>
+
+    <div class="container">
+        <h1>Dashboard</h1>
+
+        <div class="cards">
+            <div class="card">
+                <div class="label">Total Subscriptions</div>
+                <div class="value">{{ total_subs }}</div>
+            </div>
+            <div class="card">
+                <div class="label">Monthly Spend</div>
+                <div class="value">${{ "{:,.2f}".format(total_monthly) }}</div>
+            </div>
+            <div class="card alert">
+                <div class="label">Estimated Wasted Spend</div>
+                <div class="value">${{ "{:,.2f}".format(wasted_monthly) }}</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Renewals in Next 30 Days</h2>
+            {% if upcoming %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Category</th>
+                        <th>Cost</th>
+                        <th>Renewal Date</th>
+                        <th>Days Left</th>
+                        <th>Owner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in upcoming %}
+                    <tr>
+                        <td>{{ s.tool_name }}</td>
+                        <td>{{ s.category }}</td>
+                        <td>${{ s.cost }}</td>
+                        <td>{{ s.renewal_date }}</td>
+                        <td>
+                            <span class="badge {% if s.days_left <= 7 %}red{% else %}orange{% endif %}">
+                                {{ s.days_left }} days
+                            </span>
+                        </td>
+                        <td>{{ s.owner }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No renewals in the next 30 days.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Underused Tools (below 50% seat usage)</h2>
+            {% if alerts %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Category</th>
+                        <th>Seats Paid</th>
+                        <th>Seats Used</th>
+                        <th>Usage</th>
+                        <th>Owner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in alerts %}
+                    <tr>
+                        <td>{{ s.tool_name }}</td>
+                        <td>{{ s.category }}</td>
+                        <td>{{ s.seats_paid }}</td>
+                        <td>{{ s.seats_used }}</td>
+                        <td>
+                            <span class="badge red">{{ s.usage_pct }}%</span>
+                        </td>
+                        <td>{{ s.owner }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No underused tools detected.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+
+</html>

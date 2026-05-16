@@ -1,0 +1,196 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f4f6f9;
+    color: #333;
+}
+
+nav {
+    background: #1a1a2e;
+    padding: 16px 32px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+nav a:hover {
+    opacity: 1;
+}
+
+nav .brand {
+    font-weight: 700;
+    font-size: 16px;
+    margin-right: auto;
+    opacity: 1;
+    color: #4e9af1;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 32px auto;
+    padding: 0 24px;
+}
+
+h1 {
+    font-size: 22px;
+    margin-bottom: 24px;
+    color: #1a1a2e;
+}
+
+h2 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    color: #1a1a2e;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.card .label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.card .value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.card.alert .value {
+    color: #e74c3c;
+}
+
+.section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+th {
+    text-align: left;
+    padding: 10px 12px;
+    background: #f4f6f9;
+    color: #555;
+    font-weight: 600;
+}
+
+td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge.red {
+    background: #fdecea;
+    color: #e74c3c;
+}
+
+.badge.orange {
+    background: #fef3e2;
+    color: #e67e22;
+}
+
+.badge.green {
+    background: #eafaf1;
+    color: #27ae60;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+}
+
+.btn-primary {
+    background: #1a1a2e;
+    color: #fff;
+}
+
+.btn-danger {
+    background: #fdecea;
+    color: #e74c3c;
+    font-size: 12px;
+    padding: 4px 12px;
+}
+
+form .field {
+    margin-bottom: 16px;
+}
+
+form label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+form input,
+form select,
+form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+}
+
+form textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.empty {
+    color: #aaa;
+    font-size: 14px;
+    text-align: center;
+    padding: 24px 0;
+}

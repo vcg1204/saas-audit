@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Subscriptions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav>
+        <span class="brand">SaaS Audit</span>
+        <a href="/">Dashboard</a>
+        <a href="/subscriptions">Subscriptions</a>
+        <a href="/add">Add New</a>
+        <a href="/insights">Insights</a>
+    </nav>
+
+    <div class="container">
+        <h1>All Subscriptions</h1>
+
+        <div class="section">
+            {% if subs %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Category</th>
+                        <th>Cost</th>
+                        <th>Billing</th>
+                        <th>Seats Paid</th>
+                        <th>Seats Used</th>
+                        <th>Renewal Date</th>
+                        <th>Owner</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in subs %}
+                    <tr>
+                        <td>{{ s.tool_name }}</td>
+                        <td>{{ s.category }}</td>
+                        <td>${{ s.cost }}</td>
+                        <td>{{ s.billing_cycle }}</td>
+                        <td>{{ s.seats_paid or "—" }}</td>
+                        <td>{{ s.seats_used or "—" }}</td>
+                        <td>{{ s.renewal_date or "—" }}</td>
+                        <td>{{ s.owner or "—" }}</td>
+                        <td>
+                            <a href="/delete/{{ s.id }}" class="btn btn-danger"
+                                onclick="return confirm('Delete this subscription?')">
+                                Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No subscriptions added yet. <a href="/add">Add one</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+
+</html>

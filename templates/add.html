@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Add Subscription</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav>
+        <span class="brand">SaaS Audit</span>
+        <a href="/">Dashboard</a>
+        <a href="/subscriptions">Subscriptions</a>
+        <a href="/add">Add New</a>
+        <a href="/insights">Insights</a>
+    </nav>
+
+    <div class="container">
+        <h1>Add Subscription</h1>
+
+        <div class="section">
+            <form method="POST">
+                <div class="field">
+                    <label>Tool Name *</label>
+                    <input type="text" name="tool_name" required placeholder="e.g. Slack">
+                </div>
+
+                <div class="field">
+                    <label>Category</label>
+                    <select name="category">
+                        <option value="Communication">Communication</option>
+                        <option value="Design">Design</option>
+                        <option value="Development">Development</option>
+                        <option value="Analytics">Analytics</option>
+                        <option value="HR">HR</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Project Management">Project Management</option>
+                        <option value="Security">Security</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Cost *</label>
+                    <input type="number" name="cost" step="0.01" required placeholder="e.g. 499">
+                </div>
+
+                <div class="field">
+                    <label>Billing Cycle</label>
+                    <select name="billing_cycle">
+                        <option value="Monthly">Monthly</option>
+                        <option value="Annual">Annual</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label>Seats Paid</label>
+                    <input type="number" name="seats_paid" placeholder="e.g. 20">
+                </div>
+
+                <div class="field">
+                    <label>Seats Actually Used</label>
+                    <input type="number" name="seats_used" placeholder="e.g. 9">
+                </div>
+
+                <div class="field">
+                    <label>Renewal Date</label>
+                    <input type="date" name="renewal_date">
+                </div>
+
+                <div class="field">
+                    <label>Owner (who manages this tool)</label>
+                    <input type="text" name="owner" placeholder="e.g. IT Team">
+                </div>
+
+                <div class="field">
+                    <label>Notes</label>
+                    <textarea name="notes" placeholder="Any additional notes"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Add Subscription</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

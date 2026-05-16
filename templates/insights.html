@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Insights</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav>
+        <span class="brand">SaaS Audit</span>
+        <a href="/">Dashboard</a>
+        <a href="/subscriptions">Subscriptions</a>
+        <a href="/add">Add New</a>
+        <a href="/insights">Insights</a>
+    </nav>
+
+    <div class="container">
+        <h1>Insights</h1>
+
+        <div class="section">
+            <h2>Monthly Spend by Category</h2>
+            {% if by_category %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Monthly Spend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in by_category %}
+                    <tr>
+                        <td>{{ row.category }}</td>
+                        <td>${{ "{:,.2f}".format(row.monthly_spend) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No data yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Most Underused Tools</h2>
+            {% if underused %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Seats Paid</th>
+                        <th>Seats Used</th>
+                        <th>Usage %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in underused %}
+                    <tr>
+                        <td>{{ row.tool_name }}</td>
+                        <td>{{ row.seats_paid }}</td>
+                        <td>{{ row.seats_used }}</td>
+                        <td>
+                            <span class="badge {% if row.usage_pct < 30 %}red{% else %}orange{% endif %}">
+                                {{ row.usage_pct }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No underuse data available.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Top 5 Most Expensive Tools</h2>
+            {% if expensive %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Monthly Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in expensive %}
+                    <tr>
+                        <td>{{ row.tool_name }}</td>
+                        <td>${{ "{:,.2f}".format(row.monthly_cost) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No data yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Overlapping Tools (same category)</h2>
+            {% if overlaps %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Number of Tools</th>
+                        <th>Tools</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in overlaps %}
+                    <tr>
+                        <td>{{ row.category }}</td>
+                        <td>{{ row.tool_count }}</td>
+                        <td>{{ row.tools }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No overlapping tools detected.</p>
+            {% endif %}
+        </div>
+
+    </div>
+
+</body>
+
+</html>
