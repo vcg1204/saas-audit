@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Health Scores</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav>
+        <span class="brand">SaaS Audit</span>
+        <a href="/">Dashboard</a>
+        <a href="/subscriptions">Subscriptions</a>
+        <a href="/add">Add New</a>
+        <a href="/insights">Insights</a>
+        <a href="/recommendations">Recommendations</a>
+        <a href="/health">Health</a>
+        <a href="/budget">Budget</a>
+    </nav>
+
+    <div class="container">
+        <h1>Subscription Health Scores</h1>
+
+        <div class="cards">
+            <div class="card">
+                <div class="label">Healthy Tools</div>
+                <div class="value" style="color:#27ae60;">
+                    {{ scored | selectattr("status", "equalto", "Healthy") | list | length }}
+                </div>
+            </div>
+            <div class="card">
+                <div class="label">Needs Attention</div>
+                <div class="value" style="color:#e67e22;">
+                    {{ scored | selectattr("status", "equalto", "Needs Attention") | list | length }}
+                </div>
+            </div>
+            <div class="card">
+                <div class="label">At Risk</div>
+                <div class="value" style="color:#e74c3c;">
+                    {{ scored | selectattr("status", "equalto", "At Risk") | list | length }}
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            {% if scored %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Category</th>
+                        <th>Health Score</th>
+                        <th>Status</th>
+                        <th>Breakdown</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in scored %}
+                    <tr>
+                        <td>{{ s.tool }}</td>
+                        <td>{{ s.category }}</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <div style="background:#f0f0f0; border-radius:4px; width:100px; height:8px;">
+                                    <div style="background:
+                                    {% if s.score >= 70 %}#27ae60
+                                    {% elif s.score >= 40 %}#e67e22
+                                    {% else %}#e74c3c{% endif %};
+                                    width:{{ s.score }}%; height:8px; border-radius:4px;">
+                                    </div>
+                                </div>
+                                <span>{{ s.score }}/100</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge {{ s.status_color }}">{{ s.status }}</span>
+                        </td>
+                        <td style="font-size:12px; color:#888;">{{ s.breakdown }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No subscriptions added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+
+</html>

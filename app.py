@@ -323,6 +323,166 @@ def recommendations():
                            total_savings=round(total_savings, 2)
                            )
 
+# ── Health Score ───────────────────────────────────────────────────────
+
+
+@app.route("/health")
+def health():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM subscriptions")
+    subs = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    scored = []
+    for s in subs:
+        score = 0
+        breakdown = []
+
+        # seat usage score (50 points)
+        if s["seats_paid"] and s["seats_used"] is not None:
+            usage_pct = float(s["seats_used"]) / float(s["seats_paid"])
+            seat_score = round(usage_pct * 50)
+            score += seat_score
+            breakdown.append(f"Seat usage: {seat_score}/50")
+        else:
+            score += 25
+            breakdown.append("Seat usage: 25/50 (no data)")
+
+        # cost efficiency score (30 points)
+        if s["seats_used"] and float(s["seats_used"]) > 0:
+            monthly = float(
+                s["cost"]) / 12 if s["billing_cycle"] == "Annual" else float(s["cost"])
+            cost_per_seat = monthly / float(s["seats_used"])
+            if cost_per_seat < 10:
+                cost_score = 30
+            elif cost_per_seat < 25:
+                cost_score = 20
+            elif cost_per_seat < 50:
+                cost_score = 10
+            else:
+                cost_score = 5
+            score += cost_score
+            breakdown.append(f"Cost efficiency: {cost_score}/30")
+        else:
+            score += 15
+            breakdown.append("Cost efficiency: 15/30 (no data)")
+
+        # renewal safety score (20 points)
+        if s["renewal_date"]:
+            days_left = (s["renewal_date"] - date.today()).days
+            if days_left > 90:
+                renewal_score = 20
+            elif days_left > 30:
+                renewal_score = 15
+            elif days_left > 14:
+                renewal_score = 10
+            elif days_left > 7:
+                renewal_score = 5
+            else:
+                renewal_score = 0
+            score += renewal_score
+            breakdown.append(f"Renewal safety: {renewal_score}/20")
+        else:
+            score += 10
+            breakdown.append("Renewal safety: 10/20 (no data)")
+
+        if score >= 70:
+            status = "Healthy"
+            status_color = "green"
+        elif score >= 40:
+            status = "Needs Attention"
+            status_color = "orange"
+        else:
+            status = "At Risk"
+            status_color = "red"
+
+        scored.append({
+            "tool": s["tool_name"],
+            "category": s["category"],
+            "score": score,
+            "status": status,
+            "status_color": status_color,
+            "breakdown": " | ".join(breakdown)
+        })
+
+    scored.sort(key=lambda x: x["score"])
+
+    return render_template("health.html", scored=scored)
+
+# ── Budget vs Actual ───────────────────────────────────────────────────
+
+
+@app.route("/budget", methods=["GET", "POST"])
+def budget():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        new_budget = request.form["monthly_budget"]
+        cur.execute(
+            "UPDATE budget SET monthly_budget=%s, updated_at=CURRENT_TIMESTAMP WHERE id=1", (new_budget,))
+        conn.commit()
+
+    cur.execute("SELECT monthly_budget FROM budget WHERE id=1")
+    budget_row = cur.fetchone()
+    monthly_budget = float(budget_row["monthly_budget"])
+
+    cur.execute("SELECT * FROM subscriptions")
+    subs = cur.fetchall()
+
+    actual_spend = 0
+    for s in subs:
+        if s["billing_cycle"] == "Annual":
+            actual_spend += float(s["cost"]) / 12
+        else:
+            actual_spend += float(s["cost"])
+
+    actual_spend = round(actual_spend, 2)
+    remaining = round(monthly_budget - actual_spend, 2)
+    usage_pct = round((actual_spend / monthly_budget) *
+                      100, 1) if monthly_budget > 0 else 0
+
+    if usage_pct >= 100:
+        status = "Over Budget"
+        status_color = "#e74c3c"
+    elif usage_pct >= 80:
+        status = "Near Limit"
+        status_color = "#e67e22"
+    else:
+        status = "On Track"
+        status_color = "#27ae60"
+
+    # monthly breakdown per tool
+    breakdown = []
+    for s in subs:
+        monthly = float(
+            s["cost"]) / 12 if s["billing_cycle"] == "Annual" else float(s["cost"])
+        pct_of_budget = round((monthly / monthly_budget)
+                              * 100, 1) if monthly_budget > 0 else 0
+        breakdown.append({
+            "tool": s["tool_name"],
+            "category": s["category"],
+            "monthly": round(monthly, 2),
+            "pct_of_budget": pct_of_budget
+        })
+
+    breakdown.sort(key=lambda x: x["monthly"], reverse=True)
+
+    cur.close()
+    conn.close()
+
+    return render_template("budget.html",
+                           monthly_budget=monthly_budget,
+                           actual_spend=actual_spend,
+                           remaining=remaining,
+                           usage_pct=usage_pct,
+                           status=status,
+                           status_color=status_color,
+                           breakdown=breakdown
+                           )
+
 
 if __name__ == "__main__":
     app.run(debug=True)
