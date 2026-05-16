@@ -15,10 +15,14 @@
         <a href="/subscriptions">Subscriptions</a>
         <a href="/add">Add New</a>
         <a href="/insights">Insights</a>
+        <a href="/recommendations">Recommendations</a>
     </nav>
 
     <div class="container">
-        <h1>All Subscriptions</h1>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+            <h1 style="margin-bottom:0;">All Subscriptions</h1>
+            <a href="/export" class="btn btn-primary">Export to CSV</a>
+        </div>
 
         <div class="section">
             {% if subs %}
@@ -48,6 +52,8 @@
                         <td>{{ s.renewal_date or "—" }}</td>
                         <td>{{ s.owner or "—" }}</td>
                         <td>
+                            <a href="/edit/{{ s.id }}" class="btn btn-primary"
+                                style="font-size:12px; padding:4px 12px; margin-right:6px;">Edit</a>
                             <a href="/delete/{{ s.id }}" class="btn btn-danger"
                                 onclick="return confirm('Delete this subscription?')">
                                 Delete

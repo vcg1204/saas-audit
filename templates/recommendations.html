@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Recommendations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <nav>
+        <span class="brand">SaaS Audit</span>
+        <a href="/">Dashboard</a>
+        <a href="/subscriptions">Subscriptions</a>
+        <a href="/add">Add New</a>
+        <a href="/insights">Insights</a>
+        <a href="/recommendations">Recommendations</a>
+    </nav>
+
+    <div class="container">
+        <h1>Savings Recommendations</h1>
+
+        {% if total_savings > 0 %}
+        <div class="cards" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="card alert">
+                <div class="label">Estimated Monthly Savings</div>
+                <div class="value">${{ "{:,.2f}".format(total_savings) }}</div>
+            </div>
+            <div class="card alert">
+                <div class="label">Estimated Annual Savings</div>
+                <div class="value">${{ "{:,.2f}".format(total_savings * 12) }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="section">
+            {% if recommendations %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Action</th>
+                        <th>Reason</th>
+                        <th>Monthly Saving</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recommendations %}
+                    <tr>
+                        <td>{{ r.tool }}</td>
+                        <td>
+                            <span class="badge {{ r.severity }}">{{ r.type }}</span>
+                        </td>
+                        <td>{{ r.reason }}</td>
+                        <td>
+                            {% if r.saving %}
+                            ${{ "{:,.2f}".format(r.saving) }}
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty">No recommendations — your subscriptions look healthy.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</body>
+
+</html>

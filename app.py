@@ -1,3 +1,6 @@
+from flask import Response
+import io
+import csv
 from flask import Flask, render_template, request, redirect, url_for
 from database import get_connection
 from datetime import date
@@ -163,6 +166,161 @@ def insights():
                            underused=underused,
                            expensive=expensive,
                            overlaps=overlaps
+                           )
+
+# ── Edit subscription ──────────────────────────────────────────────────
+
+
+@app.route("/edit/<int:id>", methods=["GET", "POST"])
+def edit(id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        cur.execute("""
+            UPDATE subscriptions
+            SET tool_name=%s, category=%s, cost=%s, billing_cycle=%s,
+                seats_paid=%s, seats_used=%s, renewal_date=%s, owner=%s, notes=%s
+            WHERE id=%s
+        """, (
+            request.form["tool_name"],
+            request.form["category"],
+            request.form["cost"],
+            request.form["billing_cycle"],
+            request.form["seats_paid"] or None,
+            request.form["seats_used"] or None,
+            request.form["renewal_date"] or None,
+            request.form["owner"],
+            request.form["notes"],
+            id
+        ))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return redirect(url_for("subscriptions"))
+
+    cur.execute("SELECT * FROM subscriptions WHERE id = %s", (id,))
+    sub = cur.fetchone()
+    cur.close()
+    conn.close()
+    return render_template("edit.html", sub=sub)
+
+
+# ── Export to CSV ──────────────────────────────────────────────────────
+
+
+@app.route("/export")
+def export():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT tool_name, category, cost, billing_cycle, seats_paid, seats_used, renewal_date, owner, notes FROM subscriptions")
+    subs = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Tool Name", "Category", "Cost", "Billing Cycle",
+                    "Seats Paid", "Seats Used", "Renewal Date", "Owner", "Notes"])
+    for s in subs:
+        writer.writerow([
+            s["tool_name"], s["category"], s["cost"], s["billing_cycle"],
+            s["seats_paid"], s["seats_used"], s["renewal_date"], s["owner"], s["notes"]
+        ])
+
+    output.seek(0)
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=subscriptions.csv"}
+    )
+
+# ── Recommendations ────────────────────────────────────────────────────
+
+
+@app.route("/recommendations")
+def recommendations():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM subscriptions")
+    subs = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    recommendations = []
+    total_savings = 0
+
+    for s in subs:
+        monthly = float(
+            s["cost"]) / 12 if s["billing_cycle"] == "Annual" else float(s["cost"])
+
+        # underused seats recommendation
+        if s["seats_paid"] and s["seats_used"] is not None:
+            seats_paid = float(s["seats_paid"])
+            seats_used = float(s["seats_used"])
+            usage_pct = (seats_used / seats_paid) * 100
+
+            if usage_pct < 30:
+                savings = monthly
+                recommendations.append({
+                    "tool": s["tool_name"],
+                    "type": "Cancel",
+                    "reason": f"Only {usage_pct:.0f}% of seats are being used. Consider cancelling entirely.",
+                    "saving": round(savings, 2),
+                    "severity": "red"
+                })
+                total_savings += savings
+
+            elif usage_pct < 50:
+                unused = seats_paid - seats_used
+                savings = (unused / seats_paid) * monthly
+                recommendations.append({
+                    "tool": s["tool_name"],
+                    "type": "Downgrade",
+                    "reason": f"Only {usage_pct:.0f}% of seats used. Downgrade from {int(seats_paid)} to {int(seats_used)} seats and save ${savings:.0f}/month.",
+                    "saving": round(savings, 2),
+                    "severity": "orange"
+                })
+                total_savings += savings
+
+        # renewal coming up - flag for review
+        if s["renewal_date"]:
+            days_left = (s["renewal_date"] - date.today()).days
+            if 0 <= days_left <= 14:
+                recommendations.append({
+                    "tool": s["tool_name"],
+                    "type": "Review Before Renewal",
+                    "reason": f"Renews in {days_left} days. Review usage before auto-renewing.",
+                    "saving": None,
+                    "severity": "orange"
+                })
+
+    # overlap detection - same category, multiple tools
+    cur = conn.cursor() if not conn.closed else get_connection().cursor()
+    conn2 = get_connection()
+    cur2 = conn2.cursor()
+    cur2.execute("""
+        SELECT category, STRING_AGG(tool_name, ', ') as tools, COUNT(*) as cnt
+        FROM subscriptions
+        GROUP BY category
+        HAVING COUNT(*) > 1
+    """)
+    overlaps = cur2.fetchall()
+    cur2.close()
+    conn2.close()
+
+    for o in overlaps:
+        recommendations.append({
+            "tool": o["tools"],
+            "type": "Consolidate",
+            "reason": f"You have {o['cnt']} tools in {o['category']}: {o['tools']}. Consider consolidating into one.",
+            "saving": None,
+            "severity": "red"
+        })
+
+    return render_template("recommendations.html",
+                           recommendations=recommendations,
+                           total_savings=round(total_savings, 2)
                            )
 
 
